@@ -1,0 +1,80 @@
+name: Deploy flexdashboard to GitHub Pages #nombre del workflow
+
+# Controla cuando inicia el workflow
+on:
+  # Inicia el workflow con push o pull request, pero solo en la rama "main" 
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Permite ejecutar el workflow de forma manual
+  workflow_dispatch:
+
+permissions: #Permisos que requiere el workflow
+  contents: read #leer el contenido del repo
+  pages: write  #escrinir un archivo en pages
+  id-token: write  # id para la escritura 
+  
+# Un workflow esta compuesto por uno o mas jobs que pueden ejecutar de forma secuencial o paralela
+# Un job es una secuencia de pasos 
+jobs:
+  # Este workflow tiene dos jobs, el primero se llama "build" y sirve para contruir el sitio
+  build:
+    # El runner que va ejecutar el job. Ejecuta el job utilizando una máquina virtual con la versión más reciente de Ubuntu
+    runs-on: ubuntu-latest
+
+    # Los pasos representan una secuencia de tareas que se ejecutan como parte del job 
+    # Los pasos estan formados por un identificador o nombre y una accion 
+    steps:
+      
+      - name: Checkout repository # Step 1 para clonar el repo
+        uses: actions/checkout@v6 # 'uses' se usa para usar una accion ya creada por alguine mas. Las acciones estan formadas por desarrollados/nombre@version
+
+      - name: Setup R   # Step 2 para instalar R
+        uses: r-lib/actions/setup-r@v2 #accion que instala r en el runner
+
+      - name: Setup Pandoc # Step 3 para instalar pandoc 
+        uses: r-lib/actions/setup-pandoc@v2 #accion que instala pandoc en el runner
+
+      - name: Intall R packages # Step 4 para instalar las librerias de r necesarias para el dashboard 
+        run: | # 'run' sirve para ejecutar còdigo 
+          install.packages(c(
+            "rmarkdown",
+            "flexdashboard",
+            "tidyverse",
+            "nycflights13",
+            "scales",
+            "DT",
+            "ggplot2",
+            "plotly"
+            ))
+        shell: Rscript {0}  # indicamos que el codigo esta en lenguaje R 
+
+      - name: Render dashboard #step 5 para ejecutar el dashboard y crear el html
+        run: | 
+          rmarkdown::render(input = "02_dashboard_vuelos_alumnos.Rmd", output_file = "index.html" , output_dir = "_site")
+        shell: Rscript {0}    # indicamos que el codigo esta en lenguaje R 
+
+      - name: Setup GitHub Pages # step 6 para configuara github pages 
+        uses: actions/configure-pages@v5 # configura el entorno necesario para publicar en GitHub Pages
+
+      - name: Upload website # step 7 para guardar el artifact. Un artifact es un output de un job que se puede usar como input de otro job 
+        uses: actions/upload-pages-artifact@v4 # acción que toma los archivos que forman la página web y los guarda como un artifact
+        with:
+          path: _site # indica donde guardar el artifact
+        
+  deploy: #Job para publicar 
+      environment:  #indica que este job trabaja en el ambiente github-pages
+        name: github-pages
+        url: ${{ steps.deployment.outputs.page_url }} # el step deployment genera la URL de tu GitHub Pages
+      runs-on: ubuntu-latest #runner para ejecutar el job. Ejecuta el job utilizando una máquina virtual con la versión más reciente de Ubuntu
+
+      needs: build # este job no puede empezar si no termina el job anterior (build) correctamente
+
+      steps: 
+
+        - name: Deploy to GitHub Pages #step 1 para publicar
+          id: deployment #Este identificador permite que otros elementos del workflow hagan referencia a este step (se usar en el url)
+          uses: actions/deploy-pages@v4 # Esta acción toma el artifact del paso anterior y lo publica en GitHub Pages
+  
