@@ -441,7 +441,7 @@ DT::datatable(
 
 **Pregunta final:** ¿qué hace esta página que una página ejecutiva no debería intentar hacer?
 
-Profundiza en el análisis.
+Profundiza en el análisis exploratorio de los datos. Muestra gráficas secundarias.
 
 
 # Reto {.hidden}
