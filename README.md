@@ -725,6 +725,33 @@ git push
 
 ---
 
+## Error al hacer `git push`
+
+Por ejemplo:
+
+```text
+! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/...'
+hint: Updates were rejected because the remote contains work that you do not
+hint: have locally ...
+```
+
+Significa que creaste archivos directamente en GitHub (como un `README.md` o una licencia) o trabajaste desde otra computadora, y esos cambios no existen en tu versión local. Git bloquea el envío para evitar pérdida de información.
+
+Para solucionarlo y sincronizar tu proyecto, ejecuta en la terminal:
+
+```bash
+git pull origin main --rebase
+```
+
+Una vez que termine sin errores, vuelve a intentar el envío:
+
+```bash
+git push origin main
+```
+
+---
+
 ## Error: `remote origin already exists`
 
 Significa que ya existe un remoto llamado `origin`.
